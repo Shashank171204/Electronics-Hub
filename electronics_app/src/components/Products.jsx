@@ -11,8 +11,16 @@ import { ProductCardSkeleton } from "./ui/Skeleton";
 import { staggerContainer, fadeUpItem } from "./ui/motionVariants";
 
 export default function Products() {
-  const { products, productsLoading, refetchProducts, cart, setCart } =
-    useContext(appContext);
+  const {
+    products,
+    productsLoading,
+    refetchProducts,
+    searchQuery,
+    setSearchQuery,
+    searchProducts,
+    cart,
+    setCart,
+  } = useContext(appContext);
 
   // ---- Cart handlers: exact same state updates as the original ----
   const addToCart = (id) => {
@@ -59,12 +67,28 @@ export default function Products() {
         /* 2 · API returned nothing → friendly empty state with a retry action */
         <EmptyState
           icon={PackageOpen}
-          title="No products yet"
-          description="The catalog is empty right now. Try refreshing, or check back soon."
+          title={searchQuery ? `No matches for "${searchQuery}"` : "No products yet"}
+          description={
+            searchQuery
+              ? "We couldn't find any products matching your search query. Try checking for typos or searching a different term."
+              : "The catalog is empty right now. Try refreshing, or check back soon."
+          }
           action={
-            <Button variant="glass" onClick={refetchProducts}>
-              <RefreshCw className="h-4 w-4" /> Refresh
-            </Button>
+            searchQuery ? (
+              <Button
+                variant="glass"
+                onClick={() => {
+                  setSearchQuery("");
+                  searchProducts("");
+                }}
+              >
+                Clear Search
+              </Button>
+            ) : (
+              <Button variant="glass" onClick={refetchProducts}>
+                <RefreshCw className="h-4 w-4" /> Refresh
+              </Button>
+            )
           }
         />
       ) : (

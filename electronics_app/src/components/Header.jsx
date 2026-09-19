@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Cpu,
@@ -8,6 +8,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  Search,
   ShoppingCart,
   X,
 } from "lucide-react";
@@ -22,13 +23,36 @@ const NAV_ITEMS = [
 ];
 
 export default function Header() {
-  const { user, cart, products, setUser } = useContext(appContext);
+  const { user, cart, products, setUser, searchQuery, setSearchQuery, searchProducts } =
+    useContext(appContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false); // mobile menu state
 
   // Distinct products currently in the cart → badge count (same rule as before)
   const items = products.filter((value) => (cart[value._id] ?? 0) > 0);
   const isLoggedIn = Boolean(user.email);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (location.pathname !== "/") {
+      navigate("/");
+    }
+    searchProducts(searchQuery);
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (location.pathname === "/") {
+      searchProducts(val);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    searchProducts("");
+  };
 
   /* The original "Logout" just linked to /login (its setUser() call was
      commented out). Now it actually clears the session — same fields as the
@@ -59,6 +83,30 @@ export default function Header() {
             Electronics<span className="text-gradient">Hub</span>
           </span>
         </Link>
+
+        {/* Product Search Input (Desktop) */}
+        <form
+          onSubmit={handleSearchSubmit}
+          className="relative hidden flex-1 max-w-md mx-2 sm:mx-4 sm:flex items-center"
+        >
+          <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery ?? ""}
+            onChange={handleSearchChange}
+            placeholder="Search products by name or description..."
+            className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2 pl-10 pr-9 text-sm text-white placeholder-slate-400 transition-colors focus:border-cyan-400/50 focus:bg-white/[0.07] focus:outline-none focus:ring-1 focus:ring-cyan-400/50"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-2.5 grid h-5 w-5 place-items-center rounded-full text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </form>
 
         {/* Desktop nav — the active item carries a shared-layout pill
             (layoutId) that slides between items on navigation */}
@@ -163,7 +211,28 @@ export default function Header() {
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden border-t border-white/[0.06] md:hidden"
           >
-            <div className="space-y-1 px-4 py-3">
+            <div className="space-y-2 px-4 py-3">
+              {/* Mobile Search input */}
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+                <Search className="pointer-events-none absolute left-3.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery ?? ""}
+                  onChange={handleSearchChange}
+                  placeholder="Search products..."
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.04] py-2 pl-10 pr-9 text-sm text-white placeholder-slate-400 transition-colors focus:border-cyan-400/50 focus:bg-white/[0.07] focus:outline-none focus:ring-1 focus:ring-cyan-400/50"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute right-2.5 grid h-5 w-5 place-items-center rounded-full text-slate-400 hover:text-white transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </form>
+
               {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
                 <NavLink
                   key={to}
