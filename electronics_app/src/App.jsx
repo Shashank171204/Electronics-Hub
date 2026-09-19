@@ -41,6 +41,7 @@ function App() {
   const [cart, setCart] = useState({});
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   // NEW: drives the skeleton loaders on the products page
   const [productsLoading, setProductsLoading] = useState(true);
 
@@ -48,10 +49,13 @@ function App() {
   // requests then go same-origin and are proxied by Vite (see vite.config.js).
   const API = import.meta.env.VITE_API_URL ?? "";
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (query = searchQuery) => {
     setProductsLoading(true);
     try {
-      const url = `${API}/api/product/showproducts`; // unchanged endpoint
+      const trimmed = (query ?? "").trim();
+      const url = trimmed
+        ? `${API}/api/product/search?q=${encodeURIComponent(trimmed)}`
+        : `${API}/api/product/showproducts`;
       const result = await axios.get(url);
       setProducts(result.data);
     } catch (err) {
@@ -82,6 +86,9 @@ function App() {
           products,
           productsLoading, // NEW → skeleton loaders
           refetchProducts: fetchProducts, // NEW → "Try again" empty state
+          searchQuery,
+          setSearchQuery,
+          searchProducts: fetchProducts,
           cart,
           setCart,
           orders,

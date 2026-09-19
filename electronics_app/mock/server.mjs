@@ -88,9 +88,18 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "OPTIONS") return send(res, 204, {});
 
-  // GET /api/product/showproducts
-  if (req.method === "GET" && path === "/api/product/showproducts") {
-    return send(res, 200, products);
+  // GET /api/product/showproducts or /api/product/search
+  if (req.method === "GET" && (path === "/api/product/showproducts" || path === "/api/product/search")) {
+    const q = (url.searchParams.get("q") || url.searchParams.get("search") || "").trim().toLowerCase();
+    if (!q) {
+      return send(res, 200, products);
+    }
+    const filtered = products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.desc && p.desc.toLowerCase().includes(q))
+    );
+    return send(res, 200, filtered);
   }
 
   // POST /api/user/register (500 on duplicate email — like the mongoose error)

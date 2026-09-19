@@ -2,7 +2,35 @@ import productModel from "../models/productModel.js";
 
 const showProducts = async (req, res) => {
   try {
-    const products = await productModel.find();
+    const { q, search } = req.query;
+    const searchTerm = (q || search || "").trim();
+    let query = {};
+    if (searchTerm) {
+      const regex = new RegExp(searchTerm, "i");
+      query = {
+        $or: [{ name: regex }, { desc: regex }],
+      };
+    }
+    const products = await productModel.find(query);
+    res.status(200).json(products);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+const searchProducts = async (req, res) => {
+  try {
+    const { q, search } = req.query;
+    const searchTerm = (q || search || "").trim();
+    let query = {};
+    if (searchTerm) {
+      const regex = new RegExp(searchTerm, "i");
+      query = {
+        $or: [{ name: regex }, { desc: regex }],
+      };
+    }
+    const products = await productModel.find(query);
     res.status(200).json(products);
   } catch (err) {
     console.log(err);
@@ -42,4 +70,4 @@ const createproduct = async(req,res) => {
   }
 };
 
-export { showProducts, deleteProduct,updateProduct,createproduct };
+export { showProducts, searchProducts, deleteProduct, updateProduct, createproduct };
