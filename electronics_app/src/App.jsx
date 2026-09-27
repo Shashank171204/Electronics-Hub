@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
-import axios from "axios";
+import api, { endpoints, describeApiError } from "./lib/api";
 import { appContext } from "./appContext";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
@@ -45,22 +45,19 @@ function App() {
   // NEW: drives the skeleton loaders on the products page
   const [productsLoading, setProductsLoading] = useState(true);
 
-  // Fallback to "" keeps the app working when VITE_API_URL is not set —
-  // requests then go same-origin and are proxied by Vite (see vite.config.js).
-  const API = import.meta.env.VITE_API_URL ?? "";
-
+  // Base URL comes from src/lib/api.js: http://localhost:5001 in `vite dev`,
+  // the Render backend in a production build, VITE_API_URL as an override.
   const fetchProducts = async (query = searchQuery) => {
     setProductsLoading(true);
     try {
       const trimmed = (query ?? "").trim();
-      const url = trimmed
-        ? `${API}/api/product/search?q=${encodeURIComponent(trimmed)}`
-        : `${API}/api/product/showproducts`;
-      const result = await axios.get(url);
+      const result = await api.get(
+        trimmed ? endpoints.searchProducts(trimmed) : endpoints.products
+      );
       setProducts(result.data);
     } catch (err) {
       console.log(err);
-      toast.error("Couldn't load products. Is the API running?");
+      toast.error(`Couldn't load products. ${describeApiError(err)}`);
     } finally {
       setProductsLoading(false);
     }

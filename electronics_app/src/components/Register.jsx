@@ -10,7 +10,7 @@ import {
   User,
   UserRoundCheck,
 } from "lucide-react";
-import axios from "axios";
+import api, { endpoints, describeApiError } from "../lib/api";
 import toast from "react-hot-toast";
 import { appContext } from "../appContext";
 import Page from "./ui/Page";
@@ -23,7 +23,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const Navigate = useNavigate();
-  const API = import.meta.env.VITE_API_URL ?? "";
 
   const handleSubmit = async () => {
     // Light client-side validation before touching the API
@@ -43,14 +42,14 @@ export default function Register() {
     // Unchanged endpoint + payload shape ({ name, email, pass })
     setLoading(true);
     try {
-      const url = `${API}/api/user/register`;
-      await axios.post(url, user);
+      await api.post(endpoints.register, user);
       toast.success("Account created! Please log in.");
       Navigate("/login");
     } catch (err) {
       console.log(err);
-      setMsg("Something went wrong");
-      toast.error("Something went wrong");
+      const message = describeApiError(err);
+      setMsg(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
