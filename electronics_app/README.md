@@ -21,10 +21,42 @@ npm run dev
 
 ### API URL
 
-The app reads `VITE_API_URL` from your `.env`:
+Every request goes through one shared axios client, [`src/lib/api.js`](src/lib/api.js), which resolves the backend origin by itself:
 
-- **With `VITE_API_URL` set** → all calls go to that origin (your real backend). Nothing changes from the original wiring.
-- **Without it** → calls go same-origin to `/api/*` and are proxied to `http://localhost:5001` by Vite (see `vite.config.js`) — that's where the mock API runs, so the UI is fully explorable without MongoDB.
+| Situation | Base URL | Decided by |
+| --- | --- | --- |
+| `npm run dev` | `http://localhost:5001` | `import.meta.env.DEV` |
+| `npm run build` (Render deploy) | `https://electronics-hub.onrender.com` | production fallback |
+| explicit override, any mode | `VITE_API_URL` | wins over both |
+
+```bash
+# .env.local — git-ignored, only needed to point at a different backend
+VITE_API_URL=http://localhost:5001
+```
+
+Vite inlines `VITE_*` variables at **build time**, so on Render the variable has
+to be present as a *Build & environment* variable and the service must be
+redeployed after you change it. A runtime-only variable does nothing. Full
+walkthrough: [../RENDER_SETUP.md](../RENDER_SETUP.md).
+
+Components no longer build URL strings by hand — they use the client with
+root-relative paths, so there is exactly one place that knows the host:
+
+```jsx
+import api, { endpoints } from "../lib/api";
+
+const { data } = await api.get(endpoints.products); // GET <base>/api/product/showproducts
+await api.post(endpoints.newOrder, order); //        POST <base>/api/order/neworder
+```
+
+`describeApiError(err)` turns a failure into toast copy that distinguishes
+"the API is unreachable / CORS blocked it" from "401 Invalid credentials" —
+the two need completely different fixes.
+
+`vite.config.js` still proxies `/api` → `:5001`. That is only used if you make
+`resolveApiBaseUrl()` return `""` in dev; the current setup calls `:5001`
+directly, which works because the backend allowlists `http://localhost:5173`.
+
 
 ### Mock API (no MongoDB required)
 
@@ -40,6 +72,8 @@ Demo login: `demo@hub.com` / `demo123`
 src/
 ├── App.jsx            # context provider, routes, page transitions, toaster
 ├── index.css          # Tailwind v4 design system (tokens, glass/shimmer utilities)
+├── lib/
+│   └── api.js         # the ONLY place the API origin is decided (dev vs prod) + shared axios client + endpoints
 ├── components/
 │   ├── Header.jsx     # sticky glass nav, sliding active pill, animated cart badge, mobile menu
 │   ├── Products.jsx   # staggered product grid, skeleton loaders, empty state + retry
@@ -68,3 +102,4 @@ mock/
 - Emoji → **lucide-react** icons
 - Page transitions (fade + slide-up), staggered list entrances, tactile hover/tap
 - **All backend endpoints, request payload shapes and context state are unchanged**
+  (paths and bodies are identical; only *how* the base URL is resolved moved into `src/lib/api.js`)

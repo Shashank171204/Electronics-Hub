@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, LogIn, ShoppingCart, Trash2 } from "lucide-react";
-import axios from "axios";
+import api, { endpoints, describeApiError } from "../lib/api";
 import toast from "react-hot-toast";
 import { appContext } from "../appContext";
 import Page from "./ui/Page";
@@ -16,7 +16,6 @@ export default function Cart() {
   const Navigate = useNavigate();
   // NEW: shows a spinner on the Place Order button while the POST is in flight
   const [placing, setPlacing] = useState(false);
-  const API = import.meta.env.VITE_API_URL ?? "";
 
   // ---- Same state updates as the original ----
   const handleDelete = (id) => {
@@ -35,14 +34,13 @@ export default function Cart() {
     };
     setPlacing(true);
     try {
-      const url = `${API}/api/order/neworder`;
-      await axios.post(url, order);
+      await api.post(endpoints.newOrder, order);
       setCart({});
       toast.success("Order placed successfully! 🎉");
       Navigate("/orders");
     } catch (err) {
       console.log(err);
-      toast.error("Couldn't place your order. Please try again.");
+      toast.error(`Couldn't place your order. ${describeApiError(err)}`);
     } finally {
       setPlacing(false);
     }

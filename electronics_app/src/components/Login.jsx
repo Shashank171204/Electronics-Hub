@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Eye, EyeOff, LogIn, Lock, Mail } from "lucide-react";
-import axios from "axios";
+import api, { endpoints, describeApiError } from "../lib/api";
 import toast from "react-hot-toast";
 import { appContext } from "../appContext";
 import Page from "./ui/Page";
@@ -16,21 +16,20 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   // NEW: show/hide password toggle
   const [showPass, setShowPass] = useState(false);
-  const API = import.meta.env.VITE_API_URL ?? "";
 
   const handleSubmit = async () => {
     // Unchanged endpoint + payload (the whole `user` object is POSTed,
     // exactly like before — the server reads email/pass out of it)
     setLoading(true);
     try {
-      const url = `${API}/api/user/login`;
-      await axios.post(url, user);
+      await api.post(endpoints.login, user);
       toast.success(`Welcome back${user.name ? `, ${user.name}` : ""}!`);
       Navigate("/");
     } catch (err) {
       console.log(err);
-      setMsg("Invalid credentials"); // inline error (kept from the original)
-      toast.error("Invalid credentials");
+      const message = describeApiError(err);
+      setMsg(message); // inline error (kept from the original)
+      toast.error(message);
     } finally {
       setLoading(false);
     }

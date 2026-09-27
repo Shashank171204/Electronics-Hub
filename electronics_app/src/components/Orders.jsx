@@ -2,7 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, LogIn, PackageCheck, ShoppingBag } from "lucide-react";
-import axios from "axios";
+import api, { endpoints, describeApiError } from "../lib/api";
 import toast from "react-hot-toast";
 import { appContext } from "../appContext";
 import Page from "./ui/Page";
@@ -12,7 +12,6 @@ import { OrderRowSkeleton } from "./ui/Skeleton";
 import { staggerContainer, fadeUpItem } from "./ui/motionVariants";
 
 export default function Orders() {
-  const API = import.meta.env.VITE_API_URL ?? "";
   const { orders, setOrders, user } = useContext(appContext);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(Boolean(user.email));
@@ -25,12 +24,11 @@ export default function Orders() {
     if (!user.email) return;
     const fetchOrders = async () => {
       try {
-        const url = `${API}/api/order/showorder/${user.email}`;
-        const result = await axios.get(url);
+        const result = await api.get(endpoints.ordersFor(user.email));
         setOrders(result.data);
       } catch (err) {
         console.log(err);
-        toast.error("Couldn't load your orders.");
+        toast.error(`Couldn't load your orders. ${describeApiError(err)}`);
       } finally {
         setLoading(false);
       }
