@@ -287,13 +287,7 @@ For additional background, see [Render/CORS setup notes](RENDER_SETUP.md). The e
 - **404 when refreshing a frontend route:** Add the Render SPA rewrite shown above.
 - **Empty catalog:** Populate products through the admin-protected API; the repository does not include an automatic production seed process.
 
-## Author and acknowledgments
-
-- **Author:** [Your Name]
-- **GitHub:** [@YourGitHubHandle](https://github.com/YourGitHubHandle) — replace with your profile.
-- **Repository:** [Shashank171204/Electronics-Hub](https://github.com/Shashank171204/Electronics-Hub)
-
-Built with the open-source MongoDB, Express, React, Node.js, Vite, Tailwind CSS, and Framer Motion ecosystems, with deployment infrastructure from Render.
+## Built with the open-source MongoDB, Express, React, Node.js, Vite, Tailwind CSS, and Framer Motion ecosystems, with deployment infrastructure from Render.
 
 ## License
 
