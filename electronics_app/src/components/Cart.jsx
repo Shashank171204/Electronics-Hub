@@ -29,7 +29,7 @@ export default function Cart() {
     // Unchanged endpoint + payload shape: { email, items, total }
     const order = {
       email: user.email,
-      items: cart,
+      items: Object.fromEntries(Object.entries(cart).filter(([, qty]) => qty > 0)),
       total: orderValue,
     };
     setPlacing(true);
@@ -181,7 +181,7 @@ export default function Cart() {
               </div>
             </dl>
 
-            {user.email ? (
+            {user._id ? (
               <>
                 {/* Same placeOrder flow; the button shows a spinner while the
                     POST is in flight (the original had none) */}

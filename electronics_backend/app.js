@@ -12,6 +12,9 @@ import productRoute from "./routes/productRoute.js";
 import orderRoute from "./routes/orderRoute.js";
 
 export function createApp() {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    throw new Error("JWT_SECRET must contain at least 32 characters");
+  }
   const app = express();
 
   app.disable("x-powered-by");
