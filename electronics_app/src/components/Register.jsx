@@ -34,15 +34,16 @@ export default function Register() {
       toast.error("Please enter a valid email address");
       return;
     }
-    if (user.pass.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    if (user.pass.length < 8) {
+      toast.error("Password must be at least 8 characters");
       return;
     }
 
     // Unchanged endpoint + payload shape ({ name, email, pass })
     setLoading(true);
     try {
-      await api.post(endpoints.register, user);
+      await api.post(endpoints.register, { name: user.name, email: user.email, pass: user.pass });
+      setUser({ email: user.email });
       toast.success("Account created! Please log in.");
       Navigate("/login");
     } catch (err) {

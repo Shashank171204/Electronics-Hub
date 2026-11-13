@@ -1,3 +1,4 @@
+import { clearAuth } from "../lib/api";
 import { useContext, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,7 +32,7 @@ export default function Header() {
 
   // Distinct products currently in the cart → badge count (same rule as before)
   const items = products.filter((value) => (cart[value._id] ?? 0) > 0);
-  const isLoggedIn = Boolean(user.email);
+  const isLoggedIn = Boolean(user._id);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -58,7 +59,8 @@ export default function Header() {
      commented out). Now it actually clears the session — same fields as the
      author's commented intent — then redirects home. */
   const handleLogout = () => {
-    setUser({ name: "", email: "", pass: "" });
+    clearAuth();
+    setUser({});
     setMenuOpen(false);
     navigate("/");
     toast("Signed out. See you soon!", { icon: "👋" });

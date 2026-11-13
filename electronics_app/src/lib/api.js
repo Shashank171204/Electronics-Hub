@@ -12,8 +12,7 @@
  * Resolution order
  * ----------------
  * 1. `VITE_API_URL`      — explicit override, wins in any mode.
- * 2. dev (`npm run dev`) — http://localhost:5001 (your Express backend, or the
- *                          zero-dependency mock in `mock/server.mjs`).
+ * 2. dev (`npm run dev`) — same-origin /api, proxied by Vite to port 5001.
  * 3. build (`npm run build`) — the Render backend URL.
  *
  * So a production deploy works with zero configuration, while still being
@@ -27,8 +26,8 @@
  */
 import axios from "axios";
 
-/** Local Express backend / mock API (see electronics_backend + mock/server.mjs). */
-export const DEV_API_URL = "http://localhost:5001";
+/** Same-origin requests use the Vite /api proxy during development. */
+export const DEV_API_URL = "";
 
 /** Backend service on Render. */
 export const PROD_API_URL = "https://electronics-hub.onrender.com";
@@ -57,6 +56,34 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Keep the token for this tab only; never persist passwords.
+export function clearAuth() {
+  sessionStorage.removeItem("authToken");
+  sessionStorage.removeItem("authUser");
+}
+
+export function getStoredUser() {
+  try {
+    return sessionStorage.getItem("authToken")
+      ? JSON.parse(sessionStorage.getItem("authUser") || "{}") : {};
+  } catch { return {}; }
+}
+
+export function saveAuth(data) {
+  const { token, ...profile } = data;
+  delete profile.pass;
+  delete profile.password;
+  sessionStorage.setItem("authToken", token);
+  sessionStorage.setItem("authUser", JSON.stringify(profile));
+  return profile;
+}
+
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem("authToken");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 // Log the resolved target once per page load. In production this is the single
 // most useful line in DevTools when a request fails: it tells you instantly
 // whether the build got the right URL baked in.
@@ -80,7 +107,8 @@ if (import.meta.env.DEV) {
 export function describeApiError(err) {
   const status = err?.response?.status;
   if (status) {
-    if (status === 401 || status === 403) return "Invalid credentials";
+    if (status === 401) return err.response.data?.message || "Please log in again";
+    if (status === 403) return err.response.data?.message || "You do not have permission";
     if (status === 404) return "Endpoint not found on the API";
     return err.response.data?.message || `Request failed (${status})`;
   }

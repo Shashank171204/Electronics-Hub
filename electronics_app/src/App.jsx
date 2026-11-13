@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import toast, { Toaster } from "react-hot-toast";
-import api, { endpoints, describeApiError } from "./lib/api";
+import api, { endpoints, describeApiError, getStoredUser } from "./lib/api";
 import { appContext } from "./appContext";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
@@ -37,7 +37,7 @@ function AppRoutes() {
 function App() {
   // ---- State: shape identical to the original (new fields are additive) ----
   const [users, setUsers] = useState([]);
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(getStoredUser);
   const [cart, setCart] = useState({});
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
@@ -45,7 +45,7 @@ function App() {
   // NEW: drives the skeleton loaders on the products page
   const [productsLoading, setProductsLoading] = useState(true);
 
-  // Base URL comes from src/lib/api.js: http://localhost:5001 in `vite dev`,
+  // Base URL comes from src/lib/api.js: same-origin /api proxy in `vite dev`,
   // the Render backend in a production build, VITE_API_URL as an override.
   const fetchProducts = async (query = searchQuery) => {
     setProductsLoading(true);

@@ -1,12 +1,12 @@
 import productModel from "../models/productModel.js";
 
-const showProducts = async (req, res) => {
+const showProducts = async (req, res, next) => {
   try {
     const { q, search } = req.query;
     const searchTerm = (q || search || "").trim();
     let query = {};
     if (searchTerm) {
-      const regex = new RegExp(searchTerm, "i");
+      const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       query = {
         $or: [{ name: regex }, { desc: regex }],
       };
@@ -14,18 +14,17 @@ const showProducts = async (req, res) => {
     const products = await productModel.find(query);
     res.status(200).json(products);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Something went wrong" });
+    next(err);
   }
 };
 
-const searchProducts = async (req, res) => {
+const searchProducts = async (req, res, next) => {
   try {
     const { q, search } = req.query;
     const searchTerm = (q || search || "").trim();
     let query = {};
     if (searchTerm) {
-      const regex = new RegExp(searchTerm, "i");
+      const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       query = {
         $or: [{ name: regex }, { desc: regex }],
       };
@@ -33,32 +32,31 @@ const searchProducts = async (req, res) => {
     const products = await productModel.find(query);
     res.status(200).json(products);
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Something went wrong" });
+    next(err);
   }
 };
 
-const deleteProduct = async (req, res) => {
+const deleteProduct = async (req, res, next) => {
   try {
     const id = req.params.id;
     const result = await productModel.findByIdAndDelete(id);
     res.status(200).json(result);
   } catch (err) {
-    console.log(err);
+    next(err);
   }
 };
 
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
     const id = req.params.id;
     const body = req.body;
-    const result = await productModel.findByIdAndUpdate(id, body);
+    const result = await productModel.findByIdAndUpdate(id, { $set: body }, { runValidators: true });
     res.status(200).json(result);
   } catch (err) {
-    console.log(err);
+    next(err);
   }
 };
-const createproduct = async(req,res) => {
+const createproduct = async(req,res,next) => {
   try{
     const body=req.body;
     const result =await productModel.create(body);
@@ -66,7 +64,7 @@ const createproduct = async(req,res) => {
 
   }
   catch(err){
-    console.log(err);
+    next(err);
   }
 };
 

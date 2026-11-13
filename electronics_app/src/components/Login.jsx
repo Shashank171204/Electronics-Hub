@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, Eye, EyeOff, LogIn, Lock, Mail } from "lucide-react";
-import api, { endpoints, describeApiError } from "../lib/api";
+import api, { endpoints, describeApiError, saveAuth } from "../lib/api";
 import toast from "react-hot-toast";
 import { appContext } from "../appContext";
 import Page from "./ui/Page";
@@ -18,11 +18,11 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
 
   const handleSubmit = async () => {
-    // Unchanged endpoint + payload (the whole `user` object is POSTed,
-    // exactly like before — the server reads email/pass out of it)
+    // Send credentials only; store the returned profile without the password.
     setLoading(true);
     try {
-      await api.post(endpoints.login, user);
+      const { data } = await api.post(endpoints.login, { email: user.email, pass: user.pass });
+      setUser(saveAuth(data));
       toast.success(`Welcome back${user.name ? `, ${user.name}` : ""}!`);
       Navigate("/");
     } catch (err) {
